@@ -16,63 +16,62 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Chatroom
 
-var numUsers = 0;
+var graph = [];
+/* distance formula */
+var dist = function(x1, x2) {
+  let total = 0;
+  for (let i in x1) {
+    total += Math.sqrt(x1[i] - x2[i]);
+  }
+  return total;
+}
+
+/* generates node position, checks for overlap with existing nodes */
+var generate_position = function(max) {
+  let random_pos = [random(max), random(max), random(max)];
+  let tested = false;
+
+  while (!tested) {
+    for (let node of graph) {
+      let pos = [node.position.x, node.position.y, node.position.z];
+      if (dist(random_pos, pos) < max/5) {
+        random_pos = [random(max), random(max), random(max)];
+        continue;
+      }
+    }
+    tested = true;
+  }
+  return {x: random_pos[0], y: random_pos[1], z: random_pos[2]};
+}
+
+/* random integer generator */
+var random = function(max=20) {
+  return Math.ceil(Math.random() * max) - max/2;
+};
+
+var num_nodes = 100;
+var max_distance = 40; // max dist from center that a node can be placed
+for (inode = 0; inode < num_nodes; inode++) {
+  graph.push({
+    id: inode,
+    position: generate_position(max_distance),
+    owner: 0,
+  });
+}
 
 io.on('connection', function (socket) {
-  var addedUser = false;
-
-  // when the client emits 'new message', this listens and executes
-  socket.on('new message', function (data) {
-    // we tell the client to execute 'new message'
-    socket.broadcast.emit('new message', {
-      username: socket.username,
-      message: data
-    });
+  socket.on('connect-user', function () {
+    console.log('got a connection');
+    socket.emit('update-graph', graph);
   });
 
-  // when the client emits 'add user', this listens and executes
-  socket.on('add user', function (username) {
-    if (addedUser) return;
-
-    // we store the username in the socket session for this client
-    socket.username = username;
-    ++numUsers;
-    addedUser = true;
-    socket.emit('login', {
-      numUsers: numUsers
-    });
-    // echo globally (all clients) that a person has connected
-    socket.broadcast.emit('user joined', {
-      username: socket.username,
-      numUsers: numUsers
-    });
-
-  });
-
-  // when the client emits 'typing', we broadcast it to others
-  socket.on('typing', function () {
-    socket.broadcast.emit('typing', {
-      username: socket.username
-    });
-  });
-
-  // when the client emits 'stop typing', we broadcast it to others
-  socket.on('stop typing', function () {
-    socket.broadcast.emit('stop typing', {
-      username: socket.username
-    });
-  });
-
-  // when the user disconnects.. perform this
-  socket.on('disconnect', function () {
-    if (addedUser) {
-      --numUsers;
-
-      // echo globally that this client has left
-      socket.broadcast.emit('user left', {
-        username: socket.username,
-        numUsers: numUsers
-      });
+  socket.on('claim', function (id) {
+    for (var i = 0; i < graph.length; i++) {
+      if (graph[i].id == id) {
+        graph[i].owner = 1 - graph[i].owner;
+        break;
+      }
     }
+    socket.emit('update-graph', graph);
   });
 });
