@@ -1,4 +1,9 @@
 /* main.js */
+var graph = []
+var node_ids = new Set();
+var socket = io();
+
+// Create an empty scene
 
 var nodes = [];
 var players = [];
@@ -121,6 +126,20 @@ for (inode = 0; inode < num_nodes; inode++) {
 }
 
 make_player({x: 0, y: 0, z: 0});
+socket.on('update-graph', function (data) {
+  for (var i = 0; i < data.length; i++) {
+    if (!node_ids.has(data[i].id)) {
+      graph.push(data[i]);
+      node_ids.add(data[i].id);
+      sphere = new THREE.Mesh(geometry, material);
+      sphere.position.x = data[i].location[0];
+      sphere.position.y = data[i].location[1];
+      sphere.position.z = data[i].location[2];
+      scene.add(sphere);
+    }
+  }
+});
+socket.emit('connect-user');
 
 render();
 
