@@ -8,6 +8,7 @@
   "license": "BSD",
   "dependencies": {
     "express": "^4.13.4",
+    "luma.gl": "^5.1.4",
     "module": "^1.2.5",
     "socket.io": "^2.0.4",
     "three": "^0.91.0",
