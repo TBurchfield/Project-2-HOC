@@ -2,6 +2,7 @@
 
 var nodes = [];
 var players = [];
+var g_player = null
 var max_distance = 40; // max dist from center that a node can be placed
 var num_nodes = 100;
 
@@ -82,6 +83,7 @@ var make_player = function(position, color="#ffff00") {
   let geometry  = new THREE.ConeGeometry(.05, .1, 10);
   let material  = new THREE.MeshPhysicalMaterial( {color: color} );
   let player    = new THREE.Mesh(geometry, material);
+  g_player = player;
   Object.assign(player.position, position);
   scene.add(player);
   players.push({id: players.length, position: player.position});
@@ -90,6 +92,8 @@ var make_player = function(position, color="#ffff00") {
   controls.movementSpeed = 100;
   controls.lookSpeed = 0.1;
   controls.update();
+
+  g_player.add(camera);
 }
 
 
@@ -127,6 +131,17 @@ var keyActions = Rx.Observable
         };
     })());
 
-keyActions.subscribe(function(e) {
-    console.log(e.type, e.key || e.which, e.timeStamp);
-});
+keyActions.subscribe( function(e) {
+    console.log(e.type, e.key || e.which, e);
+    if (e.keyCode == 87) {
+        g_player.position.y += .1;
+    } else if (e.keyCode == 83) {
+        g_player.position.y -= .1;
+    } else if (e.keyCode == 65) {
+        g_player.position.x -= .1;
+    } else if (e.keyCode == 68) {
+        g_player.position.x += .1;
+    } else if (e.keyCode == 32) {
+        g_player.position.set(0, 0, 0);
+    }
+  });
