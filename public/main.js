@@ -48,9 +48,11 @@ var init = function() {
 
   renderer = new THREE.WebGLRenderer({antialias: true});
   renderer.setClearColor("#001a33");
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
 
 };
 
@@ -73,10 +75,16 @@ var make_node = function(position, color="#ffffff") {
 };
 
 /* renders scene */
-var render = function() {
+function render() {
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(scene.children);
+	for (var i = 0; i < intersects.length; i++) {
+		intersects[i].object.material.color.set(0xff0000);
+	}
   requestAnimationFrame(render);
   renderer.render(scene, camera);
 };
+
 
 /* initialize player */
 var make_player = function(position, color="#ffff00") {
@@ -96,6 +104,14 @@ var make_player = function(position, color="#ffff00") {
   g_player.add(camera);
 }
 
+/* handler */
+function onMouseMove(event) {
+  event.preventDefault();
+  mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+} 
+
+document.addEventListener('mousemove', onMouseMove, false);
 
 init();
 make_light();
