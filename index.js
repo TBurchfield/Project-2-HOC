@@ -18,30 +18,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var graph = [];
 graph.push({
-  id: 0;
-  location: [-4, 0, -4];
-  owner: 0;
+  id: 0,
+  location: [-4, 0, -4],
+  owner: 0
 })
 graph.push({
-  id: 1;
-  location: [0, 0, -4];
-  owner: 0;
+  id: 1,
+  location: [0, 0, -4],
+  owner: 0
 })
 graph.push({
-  id: 2;
-  location: [4, 0, -4];
-  owner: 0;
+  id: 2,
+  location: [4, 0, -4],
+  owner: 0
 })
-
-function updateGraph() {
-  socket.broadcast.emit('update-graph', {
-    graph: graph;
-  });
-}
 
 io.on('connection', function (socket) {
-  socket.on('connect', function () {
-    updateGraph();
+  socket.on('connect-user', function () {
+    console.log('got a connection');
+    socket.emit('update-graph', graph);
   });
 
   socket.on('claim', function (id) {
@@ -51,6 +46,6 @@ io.on('connection', function (socket) {
         break;
       }
     }
-    updateGraph();
+    socket.emit('update-graph', graph);
   });
 });
