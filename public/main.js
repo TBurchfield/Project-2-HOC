@@ -1,5 +1,7 @@
 // Create an empty scene
+
 var scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.002 );
 
 // Create a basic perspective camera
 var camera = new THREE.PerspectiveCamera( 100, window.innerWidth/window.innerHeight, 0.1, 1000 );
@@ -13,6 +15,11 @@ renderer.setClearColor("#001a33");
 
 // Configure renderer size
 renderer.setSize( window.innerWidth, window.innerHeight );
+
+// controls
+controls = new THREE.FirstPersonControls( camera );
+controls.movementSpeed = 100;
+controls.lookSpeed = 0.1;
 
 // Append Renderer to DOM
 document.body.appendChild( renderer.domElement );
