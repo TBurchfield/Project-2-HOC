@@ -7,8 +7,11 @@
   "private": true,
   "license": "BSD",
   "dependencies": {
-    "express": "4.13.4",
-    "socket.io": "^2.0.4"
+    "express": "^4.13.4",
+    "module": "^1.2.5",
+    "socket.io": "^2.0.4",
+    "three": "^0.91.0",
+    "three.js": "^0.77.1"
   },
   "scripts": {
     "start": "node index.js"
