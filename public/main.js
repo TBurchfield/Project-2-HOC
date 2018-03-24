@@ -1,8 +1,9 @@
 /* main.js */
 
-var nodes = []
-var max_distance = 5; // max dist from center that a node can be placed
-var num_nodes = 20;
+var nodes = [];
+var players = [];
+var max_distance = 40; // max dist from center that a node can be placed
+var num_nodes = 100;
 
 /* random integer generator */
 var random = function(max=20) {
@@ -49,11 +50,6 @@ var init = function() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild(renderer.domElement);
 
-  controls = new THREE.OrbitControls(camera, render.domElement);
-  controls.movementSpeed = 100;
-  controls.lookSpeed = 0.1;
-
-  controls.update();
 
 };
 
@@ -72,19 +68,29 @@ var make_node = function(position, color="#ffffff") {
   let node      = new THREE.Mesh(geometry, material);
   Object.assign(node.position, position);
   scene.add(node);
-  nodes.push({id: nodes.length, position: node.position, owner: 0});
+  nodes.push({id: nodes.length, position: node.position, owner: -1});
 };
 
 /* renders scene */
 var render = function() {
   requestAnimationFrame(render);
-
-  if (camera.fov > 0) {
-    //camera.fov--;
-    //camera.updateProjectionMatrix();
-  }
   renderer.render(scene, camera);
 };
+
+/* initialize player */
+var make_player = function(position, color="#ffff00") {
+  let geometry  = new THREE.ConeGeometry(.05, .1, 10);
+  let material  = new THREE.MeshPhysicalMaterial( {color: color} );
+  let player    = new THREE.Mesh(geometry, material);
+  Object.assign(player.position, position);
+  scene.add(player);
+  players.push({id: players.length, position: player.position});
+
+  controls = new THREE.OrbitControls(camera, player.domElement);
+  controls.movementSpeed = 100;
+  controls.lookSpeed = 0.1;
+  controls.update();
+}
 
 
 init();
@@ -93,5 +99,7 @@ make_light();
 for (inode = 0; inode < num_nodes; inode++) {
   make_node(generate_position(max_distance), color="#00ff00");
 }
+
+make_player({x: 0, y: 0, z: 0});
 
 render();
