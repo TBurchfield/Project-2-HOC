@@ -49,11 +49,12 @@ var init = function() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild(renderer.domElement);
 
-  /* TODO: make work and uncomment
-  controls = new THREE.FirstPersonControls(camera);
+  controls = new THREE.OrbitControls(camera, render.domElement);
   controls.movementSpeed = 100;
   controls.lookSpeed = 0.1;
-  */
+
+  controls.update();
+
 };
 
 /* makes a pointlight */
