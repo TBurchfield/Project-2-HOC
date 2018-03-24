@@ -1,52 +1,96 @@
-// Create an empty scene
+/* main.js */
 
-var scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.002 );
+var nodes = []
+var max_distance = 5; // max dist from center that a node can be placed
+var num_nodes = 20;
 
-// Create a basic perspective camera
-var camera = new THREE.PerspectiveCamera( 100, window.innerWidth/window.innerHeight, 0.1, 1000 );
-camera.position.z = 4;
+/* random integer generator */
+var random = function(max=20) {
+  return Math.ceil(Math.random() * max) - max/2;
+};
 
-// Create a renderer with Antialiasing
-var renderer = new THREE.WebGLRenderer({antialias:true});
-
-// Configure renderer clear color
-renderer.setClearColor("#001a33");
-
-// Configure renderer size
-renderer.setSize( window.innerWidth, window.innerHeight );
-
-// controls
-controls = new THREE.FirstPersonControls( camera );
-controls.movementSpeed = 100;
-controls.lookSpeed = 0.1;
-
-// Append Renderer to DOM
-document.body.appendChild( renderer.domElement );
-
-var light = new THREE.PointLight(0xFFFFFF, 1, 100000);
-light.position.set( 50, 50, 50 );
-scene.add( light );
-
-var geometry = new THREE.SphereGeometry( 1, 30, 30 );
-var material = new THREE.MeshPhysicalMaterial( { color: "#ffff66" } );
-var sphere = new THREE.Mesh( geometry, material );
-
-scene.add( sphere );
-
-// Render Loop
-var render = function () {
-  requestAnimationFrame( render );
-
-  //sphere.rotation.x += 0.01;
-  //sphere.rotation.y += 0.01;
-  if (camera.fov > 0) {
-    camera.fov--;
-    camera.updateProjectionMatrix();
+/* distance formula */
+var dist = function(x1, x2) {
+  let total = 0;
+  for (let i in x1) {
+    total += Math.sqrt(x1[i] - x2[i]);
   }
+  return total;
+}
 
-  // Render the scene
+/* generates node position, checks for overlap with existing nodes */
+var generate_position = function(max) {
+  let random_pos = [random(max), random(max), random(max)];
+  let tested = false;
+
+  while (!tested) {
+    for (let node of nodes) {
+      let pos = [node.position.x, node.position.y, node.position.z];
+      if (dist(random_pos, pos) < max/5) {
+        random_pos = [random(max), random(max), random(max)];
+        continue;
+      }
+    }
+    tested = true;
+  }
+  return {x: random_pos[0], y: random_pos[1], z: random_pos[2]};
+}
+
+/* initializes scene, camera, renderer */
+var init = function() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2("#ffffff", 0.002);
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
+  camera.position.z = 4;
+
+  renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setClearColor("#001a33");
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  document.body.appendChild(renderer.domElement);
+
+  /* TODO: make work and uncomment
+  controls = new THREE.FirstPersonControls(camera);
+  controls.movementSpeed = 100;
+  controls.lookSpeed = 0.1;
+  */
+};
+
+/* makes a pointlight */
+var make_light = function(args=["#ffffff", 1, 100000], position=[50, 50, 50]) {
+  light = new THREE.PointLight(...args);
+  light.position.set(...position);
+  scene.add(light);
+  return light;
+};
+
+/* creates a node at specified position */
+var make_node = function(position, color="#ffffff") {
+  let geometry  = new THREE.SphereGeometry(.25, 30, 30);
+  let material  = new THREE.MeshPhysicalMaterial({color: color})
+  let node      = new THREE.Mesh(geometry, material);
+  Object.assign(node.position, position);
+  scene.add(node);
+  nodes.push({id: nodes.length, position: node.position, owner: 0});
+};
+
+/* renders scene */
+var render = function() {
+  requestAnimationFrame(render);
+
+  if (camera.fov > 0) {
+    //camera.fov--;
+    //camera.updateProjectionMatrix();
+  }
   renderer.render(scene, camera);
 };
+
+
+init();
+make_light();
+
+for (inode = 0; inode < num_nodes; inode++) {
+  make_node(generate_position(max_distance), color="#00ff00");
+}
 
 render();
