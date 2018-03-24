@@ -103,3 +103,30 @@ for (inode = 0; inode < num_nodes; inode++) {
 make_player({x: 0, y: 0, z: 0});
 
 render();
+
+
+var keyDowns = Rx.Observable.fromEvent(document, 'keydown');
+var keyUps = Rx.Observable.fromEvent(document, 'keyup');
+var keyActions = Rx.Observable
+    .merge(keyDowns, keyUps)
+    .filter((function() {
+        var keysPressed = {};
+        return function(e) {
+            var k = e.key || e.which;
+            if (e.type == 'keyup') {
+                delete keysPressed[k];
+                return true;
+            } else if (e.type == 'keydown') {
+                if (keysPressed[k]) {
+                    return false;
+                } else {
+                    keysPressed[k] = true;
+                    return true;
+                }
+            }
+        };
+    })());
+
+keyActions.subscribe(function(e) {
+    console.log(e.type, e.key || e.which, e.timeStamp);
+});
