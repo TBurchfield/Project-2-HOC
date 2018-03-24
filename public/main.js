@@ -132,7 +132,7 @@ var keyActions = Rx.Observable
     })());
 
 keyActions.subscribe( function(e) {
-    console.log(e.type, e.key || e.which, e);
+    console.log(e.type, e.key || e.which, e.timeStamp);
     if (e.keyCode == 87) {
         g_player.position.y += .1;
     } else if (e.keyCode == 83) {
