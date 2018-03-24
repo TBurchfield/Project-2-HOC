@@ -8,40 +8,6 @@ var socket = io();
 var nodes = [];
 var players = [];
 var g_player = null
-var max_distance = 40; // max dist from center that a node can be placed
-var num_nodes = 100;
-
-/* random integer generator */
-var random = function(max=20) {
-  return Math.ceil(Math.random() * max) - max/2;
-};
-
-/* distance formula */
-var dist = function(x1, x2) {
-  let total = 0;
-  for (let i in x1) {
-    total += Math.sqrt(x1[i] - x2[i]);
-  }
-  return total;
-}
-
-/* generates node position, checks for overlap with existing nodes */
-var generate_position = function(max) {
-  let random_pos = [random(max), random(max), random(max)];
-  let tested = false;
-
-  while (!tested) {
-    for (let node of nodes) {
-      let pos = [node.position.x, node.position.y, node.position.z];
-      if (dist(random_pos, pos) < max/5) {
-        random_pos = [random(max), random(max), random(max)];
-        continue;
-      }
-    }
-    tested = true;
-  }
-  return {x: random_pos[0], y: random_pos[1], z: random_pos[2]};
-}
 
 /* initializes scene, camera, renderer */
 var init = function() {
@@ -76,7 +42,6 @@ var make_node = function(position, color="#ffffff") {
   let node      = new THREE.Mesh(geometry, material);
   Object.assign(node.position, position);
   scene.add(node);
-  nodes.push({id: nodes.length, position: node.position, owner: -1});
 };
 
 /* renders scene */
@@ -121,21 +86,13 @@ document.addEventListener('mousemove', onMouseMove, false);
 init();
 make_light();
 
-for (inode = 0; inode < num_nodes; inode++) {
-  make_node(generate_position(max_distance), color="#00ff00");
-}
-
 make_player({x: 0, y: 0, z: 0});
 socket.on('update-graph', function (data) {
   for (var i = 0; i < data.length; i++) {
     if (!node_ids.has(data[i].id)) {
       graph.push(data[i]);
       node_ids.add(data[i].id);
-      sphere = new THREE.Mesh(geometry, material);
-      sphere.position.x = data[i].location[0];
-      sphere.position.y = data[i].location[1];
-      sphere.position.z = data[i].location[2];
-      scene.add(sphere);
+      make_node(data[i].position);
     }
   }
 });

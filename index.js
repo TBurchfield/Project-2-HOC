@@ -17,21 +17,47 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Chatroom
 
 var graph = [];
-graph.push({
-  id: 0,
-  location: [-4, 0, -4],
-  owner: 0
-})
-graph.push({
-  id: 1,
-  location: [0, 0, -4],
-  owner: 0
-})
-graph.push({
-  id: 2,
-  location: [4, 0, -4],
-  owner: 0
-})
+/* distance formula */
+var dist = function(x1, x2) {
+  let total = 0;
+  for (let i in x1) {
+    total += Math.sqrt(x1[i] - x2[i]);
+  }
+  return total;
+}
+
+/* generates node position, checks for overlap with existing nodes */
+var generate_position = function(max) {
+  let random_pos = [random(max), random(max), random(max)];
+  let tested = false;
+
+  while (!tested) {
+    for (let node of graph) {
+      let pos = [node.position.x, node.position.y, node.position.z];
+      if (dist(random_pos, pos) < max/5) {
+        random_pos = [random(max), random(max), random(max)];
+        continue;
+      }
+    }
+    tested = true;
+  }
+  return {x: random_pos[0], y: random_pos[1], z: random_pos[2]};
+}
+
+/* random integer generator */
+var random = function(max=20) {
+  return Math.ceil(Math.random() * max) - max/2;
+};
+
+var num_nodes = 100;
+var max_distance = 40; // max dist from center that a node can be placed
+for (inode = 0; inode < num_nodes; inode++) {
+  graph.push({
+    id: inode,
+    position: generate_position(max_distance),
+    owner: 0,
+  });
+}
 
 io.on('connection', function (socket) {
   socket.on('connect-user', function () {
