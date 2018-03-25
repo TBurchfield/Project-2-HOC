@@ -14,7 +14,7 @@ var init = function() {
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2("#ffffff", 0.002);
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 2000);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 2000);
   camera.position.z = 4;
 
   renderer = new THREE.WebGLRenderer({antialias: true});
@@ -43,7 +43,6 @@ var make_node = function(position, node_id, color="#ffffff") {
   Object.assign(node.position, position);
   node.node_id = node_id;
   graph[node_id].object = node;
-  console.log('making new node: ' + node_id);
   scene.add(node);
 };
 
