@@ -92,7 +92,7 @@ socket.on('update-graph', function (data) {
     if (!node_ids.has(data[i].id)) {
       graph.push(data[i]);
       node_ids.add(data[i].id);
-      make_node(data[i].position);
+      make_node(data[i].position, color='#00ff00');
     }
   }
 });
