@@ -1,5 +1,5 @@
 /* main.js */
-var graph = []
+var graph = {}
 var node_ids = new Set();
 var socket = io();
 
@@ -36,21 +36,19 @@ var make_light = function(args=["#ffffff", 1, 100000], position=[50, 50, 50]) {
 };
 
 /* creates a node at specified position */
-var make_node = function(position, color="#ffffff") {
+var make_node = function(position, node_id, color="#ffffff") {
   let geometry  = new THREE.SphereGeometry(.25, 30, 30);
   let material  = new THREE.MeshPhysicalMaterial({color: color})
   let node      = new THREE.Mesh(geometry, material);
   Object.assign(node.position, position);
+  node.node_id = node_id;
+  graph[node_id].object = node;
+  console.log('making new node: ' + node_id);
   scene.add(node);
 };
 
 /* renders scene */
 function render() {
-  raycaster.setFromCamera(mouse, camera);
-  var intersects = raycaster.intersectObjects(scene.children);
-	for (var i = 0; i < intersects.length; i++) {
-		intersects[i].object.material.color.set(0xff0000);
-	}
   requestAnimationFrame(render);
   renderer.render(scene, camera);
 };
@@ -74,27 +72,56 @@ var make_player = function(position, color="#ffff00") {
   g_player.add(camera);
 }
 
+function recolor() {
+  console.log('recoloring');
+  for (var id in graph) {
+    if (graph[id].owner == 1) {
+      graph[id].object.material.color.set(0xff0000);
+    } else {
+      graph[id].object.material.color.set(0x00ff00);
+    }
+  }
+}
+
 /* handler */
-function onMouseMove(event) {
+function onMouseDown(event) {
   event.preventDefault();
   mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
   mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-} 
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(scene.children);
+  if (intersects.length > 0) {
+    let node_id = intersects[0].object.node_id;
+    socket.emit('claim', node_id);
+  } else {
+    console.log('swing and a miss');
+  }
+}
 
-document.addEventListener('mousemove', onMouseMove, false);
+document.addEventListener('mousedown', onMouseDown, false);
 
 init();
 make_light();
 
 make_player({x: 0, y: 0, z: 0});
+
+socket.on('update-node', function (data) {
+  //TODO
+});
+
 socket.on('update-graph', function (data) {
-  for (var i = 0; i < data.length; i++) {
-    if (!node_ids.has(data[i].id)) {
-      graph.push(data[i]);
-      node_ids.add(data[i].id);
-      make_node(data[i].position, color='#00ff00');
+  console.log('update-graph');
+  var oldgraph = graph;
+  graph = data;
+  for (var id in data) {
+    if (!node_ids.has(id)) {
+      node_ids.add(id);
+      make_node(data[id].position, id, color='#00ff00');
+    } else {
+      graph[id].object = oldgraph[id].object;
     }
   }
+  recolor();
 });
 socket.emit('connect-user');
 

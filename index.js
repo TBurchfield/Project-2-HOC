@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Chatroom
 
-var graph = [];
+var graph = {};
 /* distance formula */
 var dist = function(x1, x2) {
   let total = 0;
@@ -32,9 +32,9 @@ var generate_position = function(max) {
   let tested = false;
 
   while (!tested) {
-    for (let node of graph) {
-      let pos = [node.position.x, node.position.y, node.position.z];
-      if (dist(random_pos, pos) < max/5) {
+    for (let key in graph) {
+      let pos = [graph[key].position.x, graph[key].position.y, graph[key].position.z];
+      if (dist(random_pos, pos) < max/5) { //TODO - stopping logic seems off
         random_pos = [random(max), random(max), random(max)];
         continue;
       }
@@ -52,26 +52,21 @@ var random = function(max=20) {
 var num_nodes = 100;
 var max_distance = 40; // max dist from center that a node can be placed
 for (inode = 0; inode < num_nodes; inode++) {
-  graph.push({
+  graph[inode] = {
     id: inode,
     position: generate_position(max_distance),
     owner: 0,
-  });
+  };
 }
 
 io.on('connection', function (socket) {
   socket.on('connect-user', function () {
-    console.log('got a connection');
     socket.emit('update-graph', graph);
   });
 
   socket.on('claim', function (id) {
-    for (var i = 0; i < graph.length; i++) {
-      if (graph[i].id == id) {
-        graph[i].owner = 1 - graph[i].owner;
-        break;
-      }
-    }
-    socket.emit('update-graph', graph);
+    console.log('receiving claim request');
+    graph[id].owner = 1 - graph[id].owner;
+    io.emit('update-graph', graph);
   });
 });
