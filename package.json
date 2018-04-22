@@ -1,20 +1,12 @@
 {
-  "name": "socket.io-chat",
-  "version": "0.0.0",
-  "description": "A simple chat client using socket.io",
-  "main": "index.js",
-  "author": "Grant Timmerman",
-  "private": true,
-  "license": "BSD",
-  "dependencies": {
-    "express": "^4.13.4",
-    "luma.gl": "^5.1.4",
-    "module": "^1.2.5",
-    "socket.io": "^2.0.4",
-    "three": "^0.91.0",
-    "three.js": "^0.77.1"
-  },
+  "name": "gamesing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "PointerLockControls.js",
   "scripts": {
-    "start": "node index.js"
-  }
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
