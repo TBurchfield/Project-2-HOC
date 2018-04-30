@@ -1,8 +1,6 @@
 import path from 'path';
 import * as PHYSICS from './physics/physics-module.module.js'
 
-console.log(PHYSICS)
-
 const sphere = new WHS.Sphere({
   geometry: {
     radius: 1,
@@ -25,24 +23,19 @@ const sphere = new WHS.Sphere({
 });
 
 const app = new WHS.App([
-  new WHS.ElementModule({
-    container: document.getElementById('app')
-  }),
+  new WHS.ElementModule(document.getElementById('app')),
   new WHS.DefineModule('camera', new WHS.PerspectiveCamera({
     position: new THREE.Vector3(0, 0, 0),
-    far: 10000
+    far: 300
   })),
   new WHS.SceneModule(),
   new WHS.RenderingModule({
     bgColor: 0x1f1f1f,
 
     renderer: {
-      antialias: true,
-      shadowmap: {
-        type: THREE.PCFSoftShadowMap
-      }
+      antialias: true
     }
-  }, {shadow: true}),
+  }, {shadow: false}),
   new PHYSICS.WorldModule({
     gravity: new THREE.Vector3(0, 0, 0),
     ammo: 'https://rawgit.com/WhitestormJS/physics-module-ammonext/master/vendor/ammo.js'
@@ -61,16 +54,14 @@ new WHS.AmbientLight({
   }
 }).addTo(app);
 
-for (let i = 0; i < 200; i++) {
-  const size = 10;
-
-  const box = new WHS.Box({
+let box;
+const size = 5;
+for (let i = 0; i < 1; i++) {
+  box = new WHS.Box({
     geometry: {
       width: size,
       height: size,
-      depth: size,
-      widthSegments: 6,
-      heightSegments: 6
+      depth: size
     },
 
     modules: [
@@ -82,7 +73,7 @@ for (let i = 0; i < 200; i++) {
 
     material: new THREE.MeshNormalMaterial( { 
       flatShading: true, 
-      vertexColors: THREE.VertexColors 
+      vertexColors: THREE.FaceColors 
     } ),
 
     position: {
@@ -91,10 +82,21 @@ for (let i = 0; i < 200; i++) {
       z: Math.floor( Math.random() * 20 - 10 ) * 20
     }
   })
-  // console.log(box.native.material)
   box.addTo(app);
 }
 
-
+for (let i = 0; i < 199; i++) {
+  const box_copy = box.clone(true, true);
+  box_copy.position = {
+    x: Math.floor( Math.random() * 20 - 10 ) * 20,
+    y: Math.floor( Math.random() * 20 - 10 ) * 20,
+    z: Math.floor( Math.random() * 20 - 10 ) * 20
+  }
+  // console.log(box.native.material)
+  box_copy.addTo(app);
+}
+app.get('renderer').shadowMap.enabled = false
+app.get('renderer').shadowMap.autoUpdate = false
+console.log( app.get('renderer') )
 // Start the app
 app.start();
