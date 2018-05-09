@@ -1,11 +1,30 @@
 import path from 'path';
 import * as PHYSICS from './physics/physics-module.module.js'
+import io from 'socket.io-client'
+const socket = io('http://localhost:3000')
+
+const info = {}
+let gamestate = []
+let players = {}
+let terrain = {}
+
+function throttled(delay, fn) {
+  let lastCall = 0;
+  return function (...args) {
+    const now = (new Date).getTime();
+    if (now - lastCall < delay) {
+      return;
+    }
+    lastCall = now;
+    return fn(...args);
+  }
+}
 
 const sphere = new WHS.Sphere({
   geometry: {
     radius: 1,
-    widthSegments: 32,
-    heightSegments: 32
+    widthSegments: 12,
+    heightSegments: 12
   },
 
   modules: [
@@ -54,49 +73,121 @@ new WHS.AmbientLight({
   }
 }).addTo(app);
 
-let box;
-const size = 5;
-for (let i = 0; i < 1; i++) {
-  box = new WHS.Box({
-    geometry: {
-      width: size,
-      height: size,
-      depth: size
-    },
+console.log(terrain)
 
-    modules: [
-      new PHYSICS.SphereModule({
-        mass: 0,
-        restitution: 1
-      })
-    ],
-
-    material: new THREE.MeshNormalMaterial( { 
-      flatShading: true, 
-      vertexColors: THREE.FaceColors 
-    } ),
-
-    position: {
-      x: Math.floor( Math.random() * 20 - 10 ) * 20,
-      y: Math.floor( Math.random() * 20 - 10 ) * 20,
-      z: Math.floor( Math.random() * 20 - 10 ) * 20
-    }
-  })
-  box.addTo(app);
-}
-
-for (let i = 0; i < 199; i++) {
-  const box_copy = box.clone(true, true);
-  box_copy.position = {
-    x: Math.floor( Math.random() * 20 - 10 ) * 20,
-    y: Math.floor( Math.random() * 20 - 10 ) * 20,
-    z: Math.floor( Math.random() * 20 - 10 ) * 20
-  }
-  // console.log(box.native.material)
-  box_copy.addTo(app);
-}
 app.get('renderer').shadowMap.enabled = false
 app.get('renderer').shadowMap.autoUpdate = false
-console.log( app.get('renderer') )
+
 // Start the app
 app.start();
+
+const update_handler = throttled(25, () => {
+  socket.emit('player_move', {
+      id: info.id, 
+      pos: sphere.position, 
+      terrain: {}
+    }
+  )
+})
+
+app.manager.modules.physics.addEventListener('update', update_handler)
+
+if(!info.id){
+  socket.emit('id_req')
+}
+
+//Socket bullshit
+socket.on('greeting', (msg) => {
+    console.log(msg)
+})
+
+socket.on('loadup', (data) => {
+  let box
+  for(let key of Object.keys(data)) {
+    //key is uuidv4, data[key] to pos and color
+    let block = data[key]
+    if(!box){
+      box = new WHS.Box({
+        geometry: {
+          width: block.size || 8,
+          height: block.size || 8,
+          depth: block.size || 8
+        },
+
+        modules: [
+          new PHYSICS.SphereModule({
+            mass: 0,
+            restitution: 1
+          })
+        ],
+
+        material: new THREE.MeshNormalMaterial( { 
+          flatShading: true, 
+          vertexColors: THREE.FaceColors
+        } ),
+
+        position: block.pos
+      })
+      box.addTo(app);
+      terrain[box.native.uuid] = box
+    }
+    else {
+      const box_copy = box.clone(true, true);
+      box_copy.position = block.pos
+      box_copy.addTo(app);
+      terrain[box_copy.native.uuid] = box_copy
+    }
+  }
+})
+
+socket.on('id_res', (data) => {
+  info.id = data
+})
+
+socket.on('state', (data) => {
+  gamestate = data
+})
+
+// Manage other players here
+const gamestate_loop = new WHS.Loop(() => {
+    for (let item of Object.values(gamestate)) {
+      if(item.id === info.id){
+        continue
+      }
+      if (item.id in players) {
+        players[item.id].position = item.pos
+      }
+      else {
+        console.log(item)
+        //player is new, create a WHS object for them
+        const s = new WHS.Sphere({
+          geometry: {
+            radius: 1,
+            widthSegments: 12,
+            heightSegments: 12
+          },
+
+          modules: [
+            new PHYSICS.SphereModule({
+              mass: 1,
+              restitution: 1
+            })
+          ],
+
+          material: new THREE.MeshBasicMaterial({
+            color: 0xFF0000
+          }),
+
+          position: new THREE.Vector3(0, 0, 0)
+        })
+
+        s.addTo(app)
+
+        players[item.id] = s
+      }
+    }
+})
+
+gamestate_loop.start(app)
+
+
