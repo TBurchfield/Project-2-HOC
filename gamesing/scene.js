@@ -95,6 +95,46 @@ for (let i = 0; i < 199; i++) {
   // console.log(box.native.material)
   box_copy.addTo(app);
 }
+var player = 5
+
+var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+  var rows = 1
+  var cols = 0
+
+
+for (let i =0; i < player; i++){
+  var text2 = document.createElement('div');
+  text2.style.position = 'absolute';
+  //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+  text2.style.width = 100;
+  text2.style.height = 100;
+  text2.style.backgroundColor = "none";
+  text2.style.color = "white";
+  text2.style.fontFamily = "Arial";
+  text2.style.fontWeight = "bold";
+
+  if(200*cols>x){ //wrap line
+    rows++
+    cols = 0
+    text2.style.top = 20*rows + 'px';
+    text2.style.left = 200*cols+30 + 'px';
+    cols++
+  }
+  else{
+    text2.style.top = 20*rows + 'px';
+    text2.style.left = 200*cols+30 + 'px';
+    cols++
+  }
+  text2.innerHTML = "Player " + (i+1) + ":"; //+ score[i];
+  
+  document.body.appendChild(text2);
+}
+
 app.get('renderer').shadowMap.enabled = false
 app.get('renderer').shadowMap.autoUpdate = false
 console.log( app.get('renderer') )
